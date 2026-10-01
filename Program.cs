@@ -14,6 +14,9 @@ Product product = new Product
 Console.WriteLine(product.ToString());
 
 
+// On déclare la variable avec le type de l'INTERFACE, et on crée l'implémentation Fake.
+// Le reste du programme ne connaît que IProductRepository : demain on pourra
+// mettre un vrai repository SQL à la place sans changer une seule autre ligne.
 IProductRepository productRepository = new FakeProductRepository();
 
 // --- Lire tous les produits ---
