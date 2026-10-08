@@ -2,7 +2,7 @@
 
 namespace DemoRepo.Repositoires
 {
-    // "Fake" = faux repository : les données sont en mémoire (une List),
+    // les données sont en mémoire (une List),
     // pas dans une vraie base. Utile pour tester sans SQL Server.
     public class FakeProductRepository : IProductRepository
     {

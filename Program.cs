@@ -1,9 +1,11 @@
 ﻿using DemoRepo.Models;
 using DemoRepo.Repositoires;   // ⚠️ chez toi : DemoRepo.Repositoires (le nom de ton dossier)
-
+using Microsoft.Extensions.Configuration;
 Console.WriteLine("Hello, World!");
 
+
 // Créer un produit "à la main", sans repository
+
 Product product = new Product
 {
     Id = 1,
@@ -14,10 +16,30 @@ Product product = new Product
 Console.WriteLine(product.ToString());
 
 
-// On déclare la variable avec le type de l'INTERFACE, et on crée l'implémentation Fake.
-// Le reste du programme ne connaît que IProductRepository : demain on pourra
-// mettre un vrai repository SQL à la place sans changer une seule autre ligne.
-IProductRepository productRepository = new FakeProductRepository();
+// on construit un objet "configuration" qui lit appsettings.json
+var configuration = new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())          // cherche le fichier dans le dossier du programme
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    // optional: false   → plante tout de suite si le fichier manque (mieux que de planter plus loin)
+    // reloadOnChange    → relit le fichier s'il est modifié pendant l'exécution
+    .Build();
+
+// va chercher "ConnectionStrings" → "DefaultConnection" dans le JSON
+// ?? throw : si GetConnectionString renvoie null (clé absente du JSON), on lance une erreur claire
+string connectionString = configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+// GetSection("A:B") : va dans la section "A", puis prend la clé "B"
+string repositoryTypeString = configuration.GetSection("RepositorySettings:RepositoryType").Value
+    ?? throw new InvalidOperationException("Repository type not found.");
+
+RepositoryType repositoryType = Enum.Parse<RepositoryType>(repositoryTypeString,ignoreCase: true);   // convertit la chaîne en enum
+
+
+IProductRepository productRepository;
+
+// on donne la chaîne à la factory, comme avant
+productRepository = ProductRepoFactory.CreateProductRepository(repositoryType, connectionString);
 
 // --- Lire tous les produits ---
 IEnumerable<Product> products = productRepository.GetAllProducts();
